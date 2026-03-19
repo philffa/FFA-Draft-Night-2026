@@ -265,6 +265,7 @@ const DEFAULT_TEAMS = ['Flamingo Fury','The Great Whites','The Salties','Moneyba
 let teams = [...DEFAULT_TEAMS];
 let picks = [];
 let selectedIdx = null;
+  let usedPlayers = new Set();
 
 function snakeOrder() {
   picks = [];
@@ -332,8 +333,8 @@ function renderTable() {
       <td><span class="team-pill" style="background:${color}22;color:${color}">${teamName}</span></td>
       <td>
         <input class="editable" value="${p.player}" placeholder="Player name"
-          oninput="picks[${i}].player=this.value;if(selectedIdx===${i})updateAnnounce(${i})"
-          onclick="event.stopPropagation();selectPick(${i})">
+  oninput="picks[${i}].player=this.value;checkForDuplicates();renderTable();if(selectedIdx===${i})updateAnnounce(${i})"
+  onclick="event.stopPropagation();selectPick(${i})">
         ${rookieBadge}
       </td>
       <td><input class="editable" value="${p.position}" placeholder="${posPlaceholder}"
@@ -409,7 +410,18 @@ function copyAnnouncements() {
   });
   navigator.clipboard.writeText(lines.join('\n')).then(() => alert('All announcements copied to clipboard!'));
 }
-
+function checkForDuplicates() {
+  usedPlayers.clear();
+  picks.forEach((p, i) => {
+    if (p.player.trim()) {
+      if (usedPlayers.has(p.player.trim().toLowerCase())) {
+        alert('⚠️ Duplicate! Player already selected: ' + p.player);
+      } else {
+        usedPlayers.add(p.player.trim().toLowerCase());
+      }
+    }
+  });
+}
 snakeOrder();
 buildTeamCards();
 renderTable();
