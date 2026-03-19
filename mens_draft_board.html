@@ -332,8 +332,8 @@ function renderTable() {
       <td>${p.pickInRound}</td>
       <td><span class="team-pill" style="background:${color}22;color:${color}">${teamName}</span></td>
       <td>
-        <input class="editable" value="${p.player}" placeholder="Player name"
-  oninput="picks[${i}].player=this.value;checkForDuplicates();renderTable();if(selectedIdx===${i})updateAnnounce(${i})"
+<input class="editable" data-pick-idx="${i}" value="${p.player}" placeholder="Player name"
+oninput="picks[${i}].player=this.value;checkForDuplicates();renderTable();if(selectedIdx===${i})updateAnnounce(${i})"
   onclick="event.stopPropagation();selectPick(${i})">
         ${rookieBadge}
       </td>
@@ -411,17 +411,26 @@ function copyAnnouncements() {
   navigator.clipboard.writeText(lines.join('\n')).then(() => alert('All announcements copied to clipboard!'));
 }
 function checkForDuplicates() {
-  usedPlayers.clear();
+  const playerCounts = {};
+  picks.forEach(p => {
+    const name = p.player.trim().toLowerCase();
+    if (name) {
+      playerCounts[name] = (playerCounts[name] || 0) + 1;
+    }
+  });
+  
   picks.forEach((p, i) => {
-    if (p.player.trim()) {
-      if (usedPlayers.has(p.player.trim().toLowerCase())) {
-        alert('⚠️ Duplicate! Player already selected: ' + p.player);
+    const input = document.querySelector(`input[data-pick-idx="${i}"]`);
+    if (input) {
+      const name = p.player.trim().toLowerCase();
+      if (name && playerCounts[name] > 1) {
+        input.style.borderBottom = '2px solid #ef4444';
       } else {
-        usedPlayers.add(p.player.trim().toLowerCase());
+        input.style.borderBottom = 'none';
       }
     }
   });
-}
+} 
 snakeOrder();
 buildTeamCards();
 renderTable();
