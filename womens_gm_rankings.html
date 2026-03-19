@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Women's GM Board — FFA Draft 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14; --surface: #161920; --surface2: #1e2230;
+    --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.18);
+    --text: #f0f2f7; --muted: #6b7280; --accent: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1.25rem 2rem; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.06em; color: var(--accent); line-height: 1; }
+  .header p { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .gm-badge { background: rgba(255,255,255,0.06); border: 1px solid var(--border-strong); border-radius: 20px; padding: 4px 14px; font-size: 0.82rem; color: var(--text); margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .gm-badge span { color: var(--accent); font-weight: 500; }
+  .toolbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.6rem 2rem; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+  .btn { padding: 0.45rem 1rem; border-radius: 6px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+  .btn:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+  .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-bar { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0.6rem 2rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+  .filter-bar label { font-size: 0.75rem; color: var(--muted); }
+  .filter-bar select, .filter-bar input[type=text] { background: var(--surface); border: 1px solid var(--border-strong); color: var(--text); padding: 0.35rem 0.6rem; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; }
+  .filter-bar input[type=text] { width: 160px; }
+  .setup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 200; }
+  .setup-card { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; padding: 2rem; width: 100%; max-width: 420px; }
+  .setup-card h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--accent); margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+  .setup-card p { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.5; }
+  .setup-card input { width: 100%; background: var(--surface2); border: 1px solid var(--border-strong); color: var(--text); padding: 0.6rem 0.85rem; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; margin-bottom: 0.75rem; outline: none; }
+  .setup-card input:focus { border-color: var(--accent); }
+  .setup-error { font-size: 0.8rem; color: #ef4444; margin-bottom: 0.75rem; min-height: 1em; }
+  .main { padding: 1.25rem 2rem; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.06em; color: var(--accent); margin: 1.5rem 0 0.75rem; }
+  .section-title:first-child { margin-top: 0; }
+  .lineup-section { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+  .lineup-group h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.6rem; font-weight: 500; }
+  .slots { display: flex; flex-direction: column; gap: 6px; }
+  .slot-card { display: grid; grid-template-columns: 36px 130px 1fr; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.75rem; }
+  .slot-label { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; color: var(--accent); letter-spacing: 0.05em; }
+  .slot-desc { font-size: 0.75rem; color: var(--muted); }
+  .slot-input { background: transparent; border: none; border-bottom: 1px solid var(--border-strong); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 2px 4px; outline: none; width: 100%; }
+  .slot-input:focus { border-bottom-color: var(--accent); }
+  .slot-input::placeholder { color: var(--muted); }
+  .list-header { display: grid; grid-template-columns: 40px 1fr 100px 140px 120px 1fr 40px; gap: 8px; padding: 0.5rem 0.75rem; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-strong); margin-bottom: 4px; }
+  .player-item { display: grid; grid-template-columns: 40px 1fr 100px 140px 120px 1fr 40px; gap: 8px; align-items: center; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid transparent; background: var(--surface); margin-bottom: 4px; cursor: grab; user-select: none; transition: border-color 0.1s, background 0.1s; }
+  .player-item:hover { border-color: var(--border-strong); }
+  .player-item.dragging { opacity: 0.4; }
+  .player-item.drag-over { border-color: var(--accent); background: rgba(255,255,255,0.04); }
+  .rank-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--accent); text-align: center; }
+  .player-name { font-size: 0.88rem; font-weight: 500; }
+  .player-meta { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pos-pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 500; background: rgba(255,255,255,0.07); color: var(--text); white-space: nowrap; }
+  .drag-handle { color: var(--muted); font-size: 1rem; text-align: center; cursor: grab; }
+  .note-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.78rem; padding: 2px 4px; outline: none; }
+  .note-input:focus { border-bottom-color: var(--accent); }
+  .note-input::placeholder { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="setup-overlay" id="setup-overlay">
+  <div class="setup-card">
+    <h2>Women's GM Board</h2>
+    <p>Enter your team name and PIN to access your personal board.</p>
+    <input type="text" id="gm-name-input" placeholder="Team name" onkeydown="if(event.key==='Enter')document.getElementById('gm-pin-input').focus()">
+    <input type="password" id="gm-pin-input" placeholder="PIN" onkeydown="if(event.key==='Enter')startSession()">
+    <div class="setup-error" id="setup-error"></div>
+    <button class="btn active" style="width:100%" onclick="startSession()">Open my board</button>
+  </div>
+</div>
+
+<div class="header">
+  <div>
+    <h1>Women's GM Board</h1>
+    <p>FFA Draft 2026 &nbsp;·&nbsp; Rankings &amp; Starting Lineup</p>
+  </div>
+  <div class="gm-badge">GM: <span id="gm-display">—</span></div>
+</div>
+
+<div class="toolbar">
+  <button class="btn" onclick="copyRanking(this)">Copy my ranking</button>
+  <button class="btn" onclick="copyBookmark(this)">Copy bookmark link</button>
+  <button class="btn" onclick="resetRanking()">Reset ranking order</button>
+</div>
+
+<div class="filter-bar">
+  <label>Filter:</label>
+  <input type="text" id="search-input" placeholder="Search name..." oninput="applyFilter()">
+  <label>Position:</label>
+  <select id="pos-filter" onchange="applyFilter()"><option value="">All positions</option></select>
+  <label>City:</label>
+  <select id="city-filter" onchange="applyFilter()"><option value="">All cities</option></select>
+</div>
+
+<div class="main">
+  <div class="section-title">Starting Lineup</div>
+  <div class="lineup-section">
+    <div class="lineup-group">
+      <h3>Offense</h3>
+      <div class="slots">
+        <div class="slot-card">
+          <div class="slot-label">QB</div>
+          <div class="slot-desc">Quarterback</div>
+          <input class="slot-input" id="slot-qb" placeholder="Player name"
+            oninput="lineup['qb'] = this.value; saveToURL()">
+        </div>
+        <div class="slot-card">
+          <div class="slot-label">C</div>
+          <div class="slot-desc">Centre</div>
+          <input class="slot-input" id="slot-c" placeholder="Player name"
+            oninput="lineup['c'] = this.value; saveToURL()">
+        </div>
+        <div class="slot-card">
+          <div class="slot-label">R</div>
+          <div class="slot-desc">Receiver 1</div>
+          <input class="slot-input" id="slot-r1" placeholder="Player name"
+            oninput="lineup['r1'] = this.value; saveToURL()">
+        </div>
+        <div class="slot-card">
+          <div class="slot-label">R</div>
+          <div class="slot-desc">Receiver 2</div>
+          <input class="slot-input" id="slot-r2" placeholder="Player name"
+            oninput="lineup['r2'] = this.value; saveToURL()">
+        </div>
+        <div class="slot-card">
+          <div class="slot-label">R</div>
+          <div class="slot-desc">Receiver 3</div>
+          <input class="slot-input" id="slot-r3" placeholder="Player name"
+            oninput="lineup['r3'] = this.value; saveToURL()">
+        </div></div>
+    </div>
+    <div class="lineup-group">
+      <h3>Defense</h3>
+      <div class="slots">
+        <div class="slot-card">
+          <div class="slot-label">PR</div>
+          <div class="slot-desc">Pass Rusher</div>
+          <input class="slot-input" id="slot-pr" placeholder="Player name"
+            oninput="lineup['pr'] = this.value; saveToURL()">
+        </div>
+        <div class="slot-card">
+          <div class="slot-label">DB</div>
+          <div class="slot-desc">Defensive Back 1</div>
+          <input class="slot-input" id="slot-db1" placeholder="Player name"
+            oninput="lineup['db1'] = this.value; saveToURL()">
+        </div>
+        <div class="slot-card">
+          <div class="slot-label">DB</div>
+          <div class="slot-desc">Defensive Back 2</div>
+          <input class="slot-input" id="slot-db2" placeholder="Player name"
+            oninput="lineup['db2'] = this.value; saveToURL()">
+        </div>
+        <div class="slot-card">
+          <div class="slot-label">S</div>
+          <div class="slot-desc">Safety 1</div>
+          <input class="slot-input" id="slot-s1" placeholder="Player name"
+            oninput="lineup['s1'] = this.value; saveToURL()">
+        </div>
+        <div class="slot-card">
+          <div class="slot-label">S</div>
+          <div class="slot-desc">Safety 2</div>
+          <input class="slot-input" id="slot-s2" placeholder="Player name"
+            oninput="lineup['s2'] = this.value; saveToURL()">
+        </div></div>
+    </div>
+  </div>
+
+  <div class="section-title">Player Rankings</div>
+  <div class="list-header">
+    <div>Rank</div><div>Name</div><div>Position</div><div>Club</div><div>City</div><div>Notes</div><div></div>
+  </div>
+  <div id="player-list"></div>
+</div>
+
+<script>
+const ALL_PLAYERS = [{"name": "Anastacia Batista", "pos": "Reciever", "club": "Sun Devils", "city": "Brisbane"}, {"name": "Annika Mountstephens", "pos": "Defensive Back", "club": "Rebels", "city": "Sydney"}, {"name": "Ashleigh Werner", "pos": "Rusher", "club": "NSW", "city": "Sydney"}, {"name": "Audrey", "pos": "Reciever", "club": "UTS", "city": "Sydney"}, {"name": "Baylee maaka", "pos": "Center", "club": "Eagles victoria", "city": "Tarneit Victoria"}, {"name": "Brodee Sunerton", "pos": "Defensive Back", "club": "Sydney Uni Lioness", "city": "Abermain"}, {"name": "Cailey Taylor", "pos": "Reciever", "club": "South Brisbane Saints", "city": "Brisbane"}, {"name": "Camilla Satyasiv", "pos": "Defensive Back", "club": "SunDevils", "city": "Brisbane"}, {"name": "Casey Cubis", "pos": "Quarterback", "club": "Big Dawgs Flag Football", "city": "Sunshine Coast"}, {"name": "Chloe Hill", "pos": "Defensive Back", "club": "Big Dawgs", "city": "Perth, Western Australia"}, {"name": "Dania Herdman", "pos": "Reciever", "club": "Big Dawgs", "city": "Brisbane"}, {"name": "Davina Moore", "pos": "Defensive Back", "club": "Melon Sor-Baes", "city": "Brisbane"}, {"name": "Debbie Sorua", "pos": "Defensive Back", "club": "Melon Sorbets", "city": "Brisbane"}, {"name": "Edon Teraitua", "pos": "Quarterback", "club": "Mabel Park State High School", "city": "Brisbane"}, {"name": "Emily Annandale", "pos": "Defensive Back", "club": "Otterly unstoppable", "city": "Brisbane"}, {"name": "Emily Luth", "pos": "Reciever", "club": "Lady Gremlins", "city": "ACT"}, {"name": "Emma Dolman", "pos": "Defensive Back", "club": "Big dawgs", "city": "Perth"}, {"name": "Estelle Soden -Smith", "pos": "Reciever", "club": "Gridiron NSW ( use that logo ) we will join Sydney Uni Lions this session", "city": "Sydney"}, {"name": "Fetalaiga (Cindy) Porter-Broomhall", "pos": "Rusher", "club": "Hamilton Hawks", "city": "Hamilton"}, {"name": "Georgie", "pos": "Defensive Back", "club": "Northern Sydney Rebels", "city": "Sydney"}, {"name": "Haven Rodgers", "pos": "Reciever", "club": "LIL PUPS", "city": "QLD, GC"}, {"name": "Heidi Nutting", "pos": "Reciever", "club": "Senior Women’s team Queensland", "city": "Brisbane"}, {"name": "Isla Jaques", "pos": "Defensive Back", "club": "QLD Sun Devils", "city": "Gold Coast"}, {"name": "Jasmine Bourke", "pos": "Reciever", "club": "Big Dawgs", "city": "Perth Australia"}, {"name": "Jasmine Fretwell", "pos": "Defensive Back", "club": "Lemon Sorbaes", "city": "Brisbane"}, {"name": "Jessica Lew", "pos": "Center", "club": "Vipers", "city": "Brisbane"}, {"name": "Jorja Mouat", "pos": "Reciever", "club": "Tauranga city tridents", "city": "Tauranga"}, {"name": "Joyce Soon", "pos": "Defensive Back", "club": "Gold Coast Hydra/ Assassins Cebu", "city": "Roma, Qld"}, {"name": "Kayla Santoro", "pos": "Defensive Back", "club": "Lil Pups", "city": "Sydney NSW"}, {"name": "Keely Stevens", "pos": "Rusher", "club": "no local team/club", "city": "NSW"}, {"name": "Keira O’Connor", "pos": "Center", "club": "Lady Gremlins", "city": "Canberra, ACT"}, {"name": "Kestra Besse", "pos": "Reciever", "club": "?", "city": "Brisbane"}, {"name": "Kodie Fuller", "pos": "Reciever", "club": "Big Dawgs + Sun Devils", "city": "Brisbane"}, {"name": "Krista Jenkins", "pos": "Center", "club": "UTS Gators", "city": "Sydney"}, {"name": "Lani Warneke", "pos": "Reciever", "club": "QLD Sundevils", "city": "Miami"}, {"name": "Layla Kellar Bridgart", "pos": "Reciever", "club": "Northern Sydney Rebels/ LIL pups", "city": "Newcastle"}, {"name": "Le Le Murphy", "pos": "Defensive Back", "club": "Sorbae Melons, The Flag Football Academy", "city": "Gold Coast"}, {"name": "Lilly Richards", "pos": "Center", "club": "South Brisbane Saints", "city": "Brisbane"}, {"name": "Liv Goodwin", "pos": "Reciever", "club": "Rhinos/Lil Pups", "city": "Brisbane"}, {"name": "Maddi Finch", "pos": "Reciever", "club": "UTS Gators", "city": "Sydney"}, {"name": "Malaika Lancaster", "pos": "Defensive Back", "club": "Logan City Bears", "city": "Brisbane"}, {"name": "Meretiana Robinson", "pos": "Defensive Back", "club": "Power House", "city": "Melbourne"}, {"name": "Michelle Manuki-Savelio", "pos": "Reciever", "club": "Manurewa Eagles American football club", "city": "Auckland, New Zealand"}, {"name": "Monique Frost", "pos": "Defensive Back", "club": "Tauranga City Tridents", "city": "Tauranga - New Zealand"}, {"name": "Raquel LeBeau", "pos": "Quarterback", "club": "Melons", "city": "Brisbane (From Canada)"}, {"name": "Rebecca Baldin", "pos": "Quarterback", "club": "UTS Gators", "city": "Sydney"}, {"name": "Rebecca Gordon", "pos": "Defensive Back", "club": "Northern Sydney Rebels (NSW)", "city": "Brisbane"}, {"name": "Rebecca Herft", "pos": "Defensive Back", "club": "Carlton Cowboys", "city": "Naarm/Melbourne, VIC"}, {"name": "Ruari von Prott", "pos": "Defensive Back", "club": "QLD", "city": "Stafford"}, {"name": "Ruby Millers", "pos": "Center", "club": "Sydney Uni", "city": "Sydney"}, {"name": "Rylee O’Shaughnessy", "pos": "Rusher", "club": "Big dawgs/Queensland", "city": "Brisbane"}, {"name": "Sam Kelly", "pos": "Defensive Back", "club": "Big Dawgs", "city": "Melbourne"}, {"name": "Sami Blanchard", "pos": "Rusher", "club": "Gnomes & the Melons", "city": "Brisbane"}, {"name": "Sarah Monteith", "pos": "Reciever", "club": "Tauranga City Tridents", "city": "Putaruru, New Zealand"}, {"name": "Shanaye tissingh", "pos": "Reciever", "club": "Hamilton Hawks", "city": "Hamiltion"}, {"name": "Shannon Nolan", "pos": "Defensive Back", "club": "Sundevils", "city": "Gold Coast"}, {"name": "Shontelle Stowers", "pos": "Reciever", "club": "Rebels", "city": "Sydney"}, {"name": "Skyla Finlay", "pos": "Defensive Back", "club": "Lil pups and Brisbane Rhinos", "city": "Brisbane"}, {"name": "STELLAR GRIFFIS", "pos": "Reciever", "club": "GOLD COAST FLAG FOOTBALL", "city": "GOLD COAST"}, {"name": "Tarsha Wayne", "pos": "Reciever", "club": "UTS, NSW state and AFA", "city": "sydney"}, {"name": "Tash McPherson", "pos": "Rusher", "club": "Metro Lions", "city": "Auckland, Nz"}, {"name": "Tharra Shifa", "pos": "Reciever", "club": "I was in Nona Batavia", "city": "Brisbane"}, {"name": "Tiafi Thurston", "pos": "Defensive Back", "club": "Gold Coast Stingrays/ Bayside Ravens", "city": "Byron Bay"}, {"name": "Wanru Yuan (Esther)", "pos": "Center", "club": "Armadale Cardinals", "city": "Melbourne"}, {"name": "Yasemin Lawson", "pos": "Defensive Back", "club": "UTS gators", "city": "Central coast"}, {"name": "Zara Nicholson", "pos": "Quarterback", "club": "Lady Gremlins", "city": "Canberra"}];
+const PIN_HASHES = {"127d18627ad0a270": "Yeah Nah", "02b605415e6817be": "Kunoichi", "29c8aaf48973cccb": "Bad Girls", "562644b587522533": "5 Sheep", "ffa33ca469963f38": "Red Flags", "eb635aef035654ce": "Suffragettes"};
+const DIVISION = "Women's";
+
+let gmName = '';
+let order = ALL_PLAYERS.map((_, i) => i);
+let notes = {};
+let lineup = {};
+let dragSrc = null;
+
+async function hashPin(team, pin) {
+  const msg = team.toLowerCase().trim() + ':' + pin;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').substring(0, 16);
+}
+
+async function startSession() {
+  const teamVal = document.getElementById('gm-name-input').value.trim();
+  const pinVal = document.getElementById('gm-pin-input').value.trim();
+  const errEl = document.getElementById('setup-error');
+  if (!teamVal) { errEl.textContent = 'Please enter your team name.'; return; }
+  if (!pinVal) { errEl.textContent = 'Please enter your PIN.'; return; }
+  const h = await hashPin(teamVal, pinVal);
+  if (!PIN_HASHES[h]) { errEl.textContent = 'Incorrect team name or PIN. Please try again.'; return; }
+  gmName = PIN_HASHES[h];
+  document.getElementById('setup-overlay').style.display = 'none';
+  document.getElementById('gm-display').textContent = gmName;
+
+  const params = new URLSearchParams(window.location.search);
+  const savedGm = params.get('gm');
+  const savedOrder = params.get('order');
+  const savedNotes = params.get('notes');
+  const savedLineup = params.get('lineup');
+
+  if (savedNotes) {
+    try { const p = JSON.parse(decodeURIComponent(savedNotes)); if (typeof p === 'object') notes = p; } catch(e) {}
+  }
+  if (savedLineup) {
+    try { const p = JSON.parse(decodeURIComponent(savedLineup)); if (typeof p === 'object') lineup = p; } catch(e) {}
+  }
+  if (savedGm && savedGm.toLowerCase() === gmName.toLowerCase() && savedOrder) {
+    try {
+      const parsed = savedOrder.split(',').map(Number);
+      if (parsed.length === ALL_PLAYERS.length && parsed.every(n => !isNaN(n))) order = parsed;
+    } catch(e) {}
+  }
+
+  buildFilters();
+  renderLineup();
+  renderList();
+}
+
+function renderLineup() {
+  document.getElementById('slot-qb').value = lineup['qb'] || '';
+  document.getElementById('slot-c').value = lineup['c'] || '';
+  document.getElementById('slot-r1').value = lineup['r1'] || '';
+  document.getElementById('slot-r2').value = lineup['r2'] || '';
+  document.getElementById('slot-r3').value = lineup['r3'] || '';
+  document.getElementById('slot-pr').value = lineup['pr'] || '';
+  document.getElementById('slot-db1').value = lineup['db1'] || '';
+  document.getElementById('slot-db2').value = lineup['db2'] || '';
+  document.getElementById('slot-s1').value = lineup['s1'] || '';
+  document.getElementById('slot-s2').value = lineup['s2'] || '';
+}
+
+function buildFilters() {
+  const positions = [...new Set(ALL_PLAYERS.map(p => p.pos).filter(Boolean))].sort();
+  const cities = [...new Set(ALL_PLAYERS.map(p => p.city).filter(Boolean).map(c => c.trim()))].sort();
+  const posEl = document.getElementById('pos-filter');
+  const cityEl = document.getElementById('city-filter');
+  positions.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; posEl.appendChild(o); });
+  cities.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; cityEl.appendChild(o); });
+}
+
+function applyFilter() {
+  const search = document.getElementById('search-input').value.trim().toLowerCase();
+  const pos = document.getElementById('pos-filter').value;
+  const city = document.getElementById('city-filter').value;
+  document.querySelectorAll('.player-item').forEach(el => {
+    const idx = parseInt(el.dataset.idx);
+    const p = ALL_PLAYERS[idx];
+    const match = (!search || p.name.toLowerCase().includes(search))
+      && (!pos || p.pos === pos)
+      && (!city || p.city.trim() === city);
+    el.style.display = match ? '' : 'none';
+  });
+}
+
+function renderList() {
+  const list = document.getElementById('player-list');
+  list.innerHTML = '';
+  order.forEach((playerIdx, rank) => {
+    const p = ALL_PLAYERS[playerIdx];
+    const div = document.createElement('div');
+    div.className = 'player-item';
+    div.dataset.idx = playerIdx;
+    div.draggable = true;
+    div.innerHTML = `
+      <div class="rank-num">${rank + 1}</div>
+      <div class="player-name">${p.name}</div>
+      <div class="player-meta"><span class="pos-pill">${p.pos || '—'}</span></div>
+      <div class="player-meta">${p.club || '—'}</div>
+      <div class="player-meta">${p.city || '—'}</div>
+      <input class="note-input" value="${notes[playerIdx] || ''}" placeholder="Add note..." oninput="notes[${playerIdx}]=this.value;saveToURL()" onclick="event.stopPropagation()">
+      <div class="drag-handle">⠿</div>
+    `;
+    div.addEventListener('dragstart', e => { dragSrc = div; div.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    div.addEventListener('dragend', () => { div.classList.remove('dragging'); document.querySelectorAll('.player-item').forEach(el => el.classList.remove('drag-over')); });
+    div.addEventListener('dragover', e => { e.preventDefault(); if (div !== dragSrc) div.classList.add('drag-over'); });
+    div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+    div.addEventListener('drop', e => {
+      e.preventDefault();
+      div.classList.remove('drag-over');
+      if (!dragSrc || dragSrc === div) return;
+      const srcIdx = parseInt(dragSrc.dataset.idx);
+      const dstIdx = parseInt(div.dataset.idx);
+      const srcPos = order.indexOf(srcIdx);
+      const dstPos = order.indexOf(dstIdx);
+      order.splice(srcPos, 1);
+      order.splice(dstPos, 0, srcIdx);
+      renderList();
+      saveToURL();
+    });
+    list.appendChild(div);
+  });
+  applyFilter();
+}
+
+function saveToURL() {
+  const params = new URLSearchParams();
+  params.set('gm', gmName);
+  params.set('order', order.join(','));
+  if (Object.keys(notes).length) params.set('notes', encodeURIComponent(JSON.stringify(notes)));
+  if (Object.keys(lineup).length) params.set('lineup', encodeURIComponent(JSON.stringify(lineup)));
+  history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+}
+
+function copyBookmark(btn) {
+  saveToURL();
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy bookmark link', 2000);
+  });
+}
+
+function copyRanking(btn) {
+  const lines = [DIVISION + ' GM Board — ' + gmName, ''];
+  lines.push('STARTING LINEUP');
+  lines.push('Offense:');
+  lines.push('  QB: ' + (lineup['qb'] || '—'));
+  lines.push('  C: ' + (lineup['c'] || '—'));
+  lines.push('  R: ' + (lineup['r1'] || '—'));
+  lines.push('  R: ' + (lineup['r2'] || '—'));
+  lines.push('  R: ' + (lineup['r3'] || '—'));
+  lines.push('Defense:');
+  lines.push('  PR: ' + (lineup['pr'] || '—'));
+  lines.push('  DB: ' + (lineup['db1'] || '—'));
+  lines.push('  DB: ' + (lineup['db2'] || '—'));
+  lines.push('  S: ' + (lineup['s1'] || '—'));
+  lines.push('  S: ' + (lineup['s2'] || '—'));
+  lines.push('');
+  lines.push('PLAYER RANKINGS');
+  order.forEach((playerIdx, rank) => {
+    const p = ALL_PLAYERS[playerIdx];
+    const note = notes[playerIdx] ? ' — ' + notes[playerIdx] : '';
+    lines.push((rank+1) + '. ' + p.name + ' | ' + (p.pos||'—') + ' | ' + (p.club||'—') + ' | ' + (p.city||'—') + note);
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy my ranking', 2000);
+  });
+}
+
+function resetRanking() {
+  order = ALL_PLAYERS.map((_, i) => i);
+  renderList();
+  saveToURL();
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('gm')) document.getElementById('gm-name-input').value = urlParams.get('gm');
+</script>
+</body>
+</html>
